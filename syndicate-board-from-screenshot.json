@@ -1,0 +1,161 @@
+{
+  "version": 2,
+  "exportedAt": "2026-07-12T12:40:00.000Z",
+  "board": {
+    "members": [
+      {
+        "name": "Aisling",
+        "division": "Intervention",
+        "rank": 1,
+        "leader": false,
+        "imprisonedTurns": 1
+      },
+      {
+        "name": "Cameria",
+        "division": "Research",
+        "rank": 3,
+        "leader": true,
+        "imprisonedTurns": 0
+      },
+      {
+        "name": "Elreon",
+        "division": "Research",
+        "rank": 1,
+        "leader": false,
+        "imprisonedTurns": 0
+      },
+      {
+        "name": "Gravicius",
+        "division": "Absent",
+        "rank": 0,
+        "leader": false,
+        "imprisonedTurns": 0
+      },
+      {
+        "name": "Guff",
+        "division": "Fortification",
+        "rank": 1,
+        "leader": false,
+        "imprisonedTurns": 0
+      },
+      {
+        "name": "Haku",
+        "division": "Intervention",
+        "rank": 3,
+        "leader": true,
+        "imprisonedTurns": 0
+      },
+      {
+        "name": "Hillock",
+        "division": "Transportation",
+        "rank": 3,
+        "leader": true,
+        "imprisonedTurns": 0
+      },
+      {
+        "name": "It That Fled",
+        "division": "Absent",
+        "rank": 0,
+        "leader": false,
+        "imprisonedTurns": 0
+      },
+      {
+        "name": "Janus",
+        "division": "Research",
+        "rank": 1,
+        "leader": false,
+        "imprisonedTurns": 0
+      },
+      {
+        "name": "Jorgin",
+        "division": "Unassigned",
+        "rank": 0,
+        "leader": false,
+        "imprisonedTurns": 1
+      },
+      {
+        "name": "Korell",
+        "division": "Transportation",
+        "rank": 1,
+        "leader": false,
+        "imprisonedTurns": 0
+      },
+      {
+        "name": "Leo",
+        "division": "Unassigned",
+        "rank": 0,
+        "leader": false,
+        "imprisonedTurns": 0
+      },
+      {
+        "name": "Riker",
+        "division": "Intervention",
+        "rank": 1,
+        "leader": false,
+        "imprisonedTurns": 0
+      },
+      {
+        "name": "Rin",
+        "division": "Absent",
+        "rank": 0,
+        "leader": false,
+        "imprisonedTurns": 0
+      },
+      {
+        "name": "Tora",
+        "division": "Absent",
+        "rank": 0,
+        "leader": false,
+        "imprisonedTurns": 0
+      },
+      {
+        "name": "Vagan",
+        "division": "Transportation",
+        "rank": 1,
+        "leader": false,
+        "imprisonedTurns": 0
+      },
+      {
+        "name": "Vorici",
+        "division": "Fortification",
+        "rank": 3,
+        "leader": false,
+        "imprisonedTurns": 2
+      }
+    ],
+    "relationships": [
+      {
+        "a": "Cameria",
+        "b": "Vorici",
+        "status": "trusted"
+      },
+      {
+        "a": "Cameria",
+        "b": "Elreon",
+        "status": "trusted"
+      },
+      {
+        "a": "Haku",
+        "b": "Leo",
+        "status": "trusted"
+      }
+    ],
+    "intelligence": {
+      "Transportation": 56,
+      "Fortification": 43,
+      "Research": 35,
+      "Intervention": 87
+    },
+    "strategy": {
+      "enforceShape": true,
+      "runDivisions": [
+        "Transportation",
+        "Research"
+      ],
+      "preserveReady": true
+    },
+    "updatedAt": 1783857600000
+  },
+  "goals": {},
+  "snapshots": []
+}
