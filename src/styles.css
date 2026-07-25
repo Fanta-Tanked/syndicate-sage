@@ -231,3 +231,21 @@ footer { border-color: #272a26; }
 .option-actions { display: flex; gap: 6px; }.outlook { display: grid; gap: 3px; margin: 0 0 14px; padding: 10px; border: 1px solid #433b34; border-radius: 6px; background: #1c1917; }.outlook strong { color: #d5a17b; font-size: 10px; }.outlook span { color: #9a9e97; font-size: 10px; }
 @media (max-width: 700px) { .data-tools { padding: 4px 10px; overflow-x: auto; }.data-tools > span { min-width: 8px; }.data-tools button { white-space: nowrap; }.review-tools { display: block; }.member-row { grid-template-columns: 28px 1fr 105px; }.prison-toggle { grid-row: 2; grid-column: 1; }.intel-strip > strong { width: 100%; }.option-actions { margin-top: 9px; flex-wrap: wrap; } }
 .intel-strip label button { align-self: stretch; padding: 0 6px; border: 0; border-left: 1px solid #4e794f; background: #213023; color: #9bc39f; font-size: 8px; cursor: pointer; }
+
+/* 3.29 cheat-sheet priority bands */
+.tier-legend { display: flex; align-items: center; gap: 14px; margin: 14px 0 10px; color: #8e928b; font-size: 10px; }
+.tier-legend > span { display: flex; align-items: center; gap: 6px; }
+.tier-legend i { width: 10px; height: 10px; border-radius: 3px; border: 1px solid #00000055; }
+.tier-legend-note { margin-left: auto; color: #6d716b; letter-spacing: .07em; text-transform: uppercase; font-size: 9px; }
+.reward.tier-great { background: #1f5f2c33; border-color: #1f5f2c88; }
+.reward.tier-good { background: #87661733; border-color: #87661788; }
+.reward.tier-worst { background: #691c2433; border-color: #691c2488; color: #b9928e; }
+.reward.tier-great:hover { background: #1f5f2c55; }
+.reward.tier-good:hover { background: #87661755; }
+.reward.tier-worst:hover { background: #691c2455; }
+/* Selection is shown with the gold outline so the band tint stays readable. */
+.reward.selected { border-color: #d09161; box-shadow: inset 0 0 0 1px #d0916155; color: #f2ddc6; }
+.member-tier { margin-left: auto; width: 17px; height: 17px; flex: 0 0 auto; border-radius: 4px; display: grid; place-items: center; font-style: normal; font-size: 9px; font-weight: 700; color: #f0efe9; }
+.reward-tier-chip { display: inline-block; margin-top: 6px; padding: 2px 7px; border-radius: 3px; font-size: 8px; letter-spacing: .08em; text-transform: uppercase; color: #f0efe9; }
+.virtual-member { padding-left: 8px; }
+.tier-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 4px 0 0 4px; }

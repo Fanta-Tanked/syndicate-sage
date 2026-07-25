@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AlertTriangle, Archive, ArrowRightLeft, Check, ChevronRight, Crown, Download, ExternalLink, Redo2, RotateCcw, Save, Sparkles, Swords, Target, Undo2, Upload, X } from 'lucide-react'
-import { DIVISION_COLORS, MEMBERS, REWARDS, SHEET_RECOMMENDED } from './data'
+import { DIVISION_COLORS, LEAGUE_VERSION, MEMBER_TIERS, MEMBERS, REWARD_TIERS, REWARDS, rewardWeight, SHEET_RECOMMENDED, TIER_COLORS, TIERS } from './data'
 import { advanceEncounter, makeBasicOptions, scoreOptions, SHAPE_TARGETS } from './planner'
 import { exportBackup, importBackup, loadBoard, loadGoals, loadHistory, loadSnapshots, saveBoard, saveGoals, saveHistory, saveSnapshots } from './storage'
 import { DIVISIONS, type Assignment, type BoardSnapshot, type BoardState, type Division, type EncounterOption, type GoalWeights, type MemberName, type MemberState } from './types'
@@ -19,7 +19,7 @@ function Header({ step, setStep }: { step: number; setStep: (step: number) => vo
     <header className="topbar">
       <button className="brand" onClick={() => setStep(1)} aria-label="Syndicate Sage home">
         <span className="brand-mark"><Swords size={19} /></span>
-        <span><strong>Syndicate Sage</strong><small>Betrayal Board Planner</small></span>
+        <span><strong>Syndicate Sage</strong><small>Betrayal Board Planner · {LEAGUE_VERSION}</small></span>
       </button>
       <nav className="steps" aria-label="Workflow">
         {['Import board', 'Set targets', 'Pick an option'].map((label, index) => {
@@ -29,8 +29,8 @@ function Header({ step, setStep }: { step: number; setStep: (step: number) => vo
           </button>
         })}
       </nav>
-      <a className="source-link" href="https://docs.google.com/spreadsheets/d/1fIs8sdvgZG7iVouPdtFkbRx5kv55_xVja8l19yubyRU/edit?gid=1814105689#gid=1814105689" target="_blank" rel="noreferrer">
-        Reward sheet <ExternalLink size={14} />
+      <a className="source-link" href="https://elrincondelexiliado.com/syndicate" target="_blank" rel="noreferrer">
+        {LEAGUE_VERSION} cheat sheet <ExternalLink size={14} />
       </a>
     </header>
   </>
@@ -202,7 +202,9 @@ function VirtualBoard({ board, goals, onEdit, onBoard }: { board: BoardState; go
               {members.map(member => {
                 const targetHere = !!goals[member.name]?.[division]
                 const targetedElsewhere = !targetHere && Object.values(goals[member.name] ?? {}).some(Boolean)
-                return <div ref={node => { if (node) memberNodes.current.set(member.name, node); else memberNodes.current.delete(member.name) }} draggable onDragStart={event => { event.dataTransfer.setData('text/member', member.name); event.dataTransfer.effectAllowed = 'move' }} className={`virtual-member ${targetHere ? 'target-here' : targetedElsewhere ? 'target-elsewhere' : ''}`} key={member.name}>
+                const tier = REWARD_TIERS[member.name][division]
+                return <div ref={node => { if (node) memberNodes.current.set(member.name, node); else memberNodes.current.delete(member.name) }} draggable onDragStart={event => { event.dataTransfer.setData('text/member', member.name); event.dataTransfer.effectAllowed = 'move' }} className={`virtual-member ${targetHere ? 'target-here' : targetedElsewhere ? 'target-elsewhere' : ''}`} key={member.name} title={`${REWARDS[member.name][division]} — ${tier} in ${LEAGUE_VERSION}`}>
+                  <i className="tier-bar" style={{ background: TIER_COLORS[tier] }} />
                   <span className="avatar">{member.name.split(' ').map(v => v[0]).slice(0, 2).join('')}</span>
                   <div><strong>{member.name}</strong><span className="virtual-rank">{[1, 2, 3].map(rank => <i className={member.rank >= rank ? 'on' : ''} key={rank}>◆</i>)}</span></div>
                   {member.leader && <Crown size={14} className="leader-crown" />}
@@ -240,26 +242,30 @@ function TargetsStep({ board, goals, onGoals, next }: { board: BoardState; goals
   const toggle = (member: MemberName, division: Division) => {
     const updated = structuredClone(goals)
     const active = updated[member]?.[division]
-    updated[member] = { ...(updated[member] ?? {}), [division]: active ? 0 : 3 }
+    updated[member] = { ...(updated[member] ?? {}), [division]: active ? 0 : rewardWeight(member, division) }
     onGoals(updated)
   }
   const preset = () => {
     const updated: GoalWeights = {}
-    for (const [member, division] of Object.entries(SHEET_RECOMMENDED)) updated[member as MemberName] = { [division as Division]: 3 }
+    for (const [member, division] of Object.entries(SHEET_RECOMMENDED)) {
+      updated[member as MemberName] = { [division as Division]: rewardWeight(member as MemberName, division as Division) }
+    }
     onGoals(updated)
   }
   return <main className="page wide-page">
     <div className="eyebrow"><Target size={14} /> STEP 2 OF 3</div>
-    <div className="title-row"><div><h1>What are you building toward?</h1><p className="lede">Select the rewards you value. Higher rank makes a selected cell more valuable to the planner.</p></div><button className="secondary" onClick={preset}><Sparkles size={16} /> Use sheet’s suggested setup</button></div>
+    <div className="title-row"><div><h1>What are you building toward?</h1><p className="lede">Select the rewards you value. Cells are shaded by their {LEAGUE_VERSION} priority, and a higher-priority cell counts for more once its member ranks up.</p></div><button className="secondary" onClick={preset}><Sparkles size={16} /> Use sheet’s suggested setup</button></div>
+    <div className="tier-legend">{TIERS.map(tier => <span key={tier}><i style={{ background: TIER_COLORS[tier] }} />{tier}</span>)}<span className="tier-legend-note">{LEAGUE_VERSION} priorities</span></div>
     <div className="reward-table-wrap">
       <table className="reward-table">
         <thead><tr><th>Member</th>{DIVISIONS.map(d => <th key={d}><span style={{ background: DIVISION_COLORS[d] }} />{d}</th>)}</tr></thead>
         <tbody>{MEMBERS.map(member => {
           const current = board.members.find(m => m.name === member)
-          return <tr key={member}><th><span className="avatar small">{member.split(' ').map(v => v[0]).slice(0, 2).join('')}</span><span>{member}<small>{current?.division === 'Unassigned' ? 'Not on board / unassigned' : `${current?.division} · Rank ${current?.rank}`}</small></span></th>
+          return <tr key={member}><th><span className="avatar small" style={{ boxShadow: `inset 0 0 0 2px ${TIER_COLORS[MEMBER_TIERS[member]]}` }}>{member.split(' ').map(v => v[0]).slice(0, 2).join('')}</span><span>{member}<small>{current?.division === 'Unassigned' ? 'Not on board / unassigned' : `${current?.division} · Rank ${current?.rank}`}</small></span><i className="member-tier" title={`${MEMBER_TIERS[member]} overall in ${LEAGUE_VERSION}`} style={{ background: TIER_COLORS[MEMBER_TIERS[member]] }}>{MEMBER_TIERS[member][0]}</i></th>
             {DIVISIONS.map(division => {
               const active = !!goals[member]?.[division]
-              return <td key={division}><button className={`reward ${active ? 'selected' : ''}`} onClick={() => toggle(member, division)}><span className="check">{active && <Check size={13} />}</span>{REWARDS[member][division]}</button></td>
+              const tier = REWARD_TIERS[member][division]
+              return <td key={division}><button className={`reward tier-${tier.toLowerCase()} ${active ? 'selected' : ''}`} title={`${tier} priority in ${LEAGUE_VERSION}`} onClick={() => toggle(member, division)}><span className="check">{active && <Check size={13} />}</span>{REWARDS[member][division]}</button></td>
             })}
           </tr>
         })}</tbody>
@@ -316,7 +322,7 @@ function PlannerStep({ board, goals, onBoard, onEdit }: { board: BoardState; goa
     <VirtualBoard board={board} goals={goals} onEdit={onEdit} onBoard={onBoard} />
     <section className="encounter-card">
       <div className="encounter-head"><div><span className="live-dot" /> Current encounter</div><small>Board changes are saved after you confirm a choice</small></div>
-      <div className="encounter-controls"><label>Defeated member<select value={actorName} onChange={e => changeActor(e.target.value as MemberName)}>{active.map(m => <option key={m.name}>{m.name}</option>)}</select></label><div className="current-position"><small>CURRENT POSITION</small><strong>{actor.division}</strong><span>Rank {actor.rank || '—'} {actor.leader && '· Leader'}</span></div><div className="current-reward"><small>SAFEHOUSE REWARD</small><strong>{DIVISIONS.includes(actor.division as never) ? REWARDS[actor.name][actor.division as Division] : 'No assigned reward'}</strong></div></div>
+      <div className="encounter-controls"><label>Defeated member<select value={actorName} onChange={e => changeActor(e.target.value as MemberName)}>{active.map(m => <option key={m.name}>{m.name}</option>)}</select></label><div className="current-position"><small>CURRENT POSITION</small><strong>{actor.division}</strong><span>Rank {actor.rank || '—'} {actor.leader && '· Leader'}</span></div><div className="current-reward"><small>SAFEHOUSE REWARD</small><strong>{DIVISIONS.includes(actor.division as never) ? REWARDS[actor.name][actor.division as Division] : 'No assigned reward'}</strong>{DIVISIONS.includes(actor.division as never) && <span className="reward-tier-chip" style={{ background: TIER_COLORS[REWARD_TIERS[actor.name][actor.division as Division]] }}>{REWARD_TIERS[actor.name][actor.division as Division]} in {LEAGUE_VERSION}</span>}</div></div>
     </section>
 
     {options.length > 0 && <section className="recommendation">

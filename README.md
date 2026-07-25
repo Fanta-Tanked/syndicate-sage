@@ -1,6 +1,6 @@
 # Syndicate Sage
 
-A local-first Path of Exile Betrayal board assistant. Enter your board, select the safehouse rewards you want, then compare the exact options offered after an encounter.
+A local-first Path of Exile Betrayal board assistant, using the **3.29** reward grid. Enter your board, select the safehouse rewards you want, then compare the exact options offered after an encounter.
 
 ## Run it
 
@@ -14,7 +14,7 @@ Open `http://localhost:5173`. Use `npm test` for the planner tests and `npm run 
 ## Workflow
 
 1. Enter each member's division, rank, leadership, and prisoner status, or start from the suggested 2/5/2/5 layout and correct it.
-2. Select the member/division rewards you want, or load the supplied spreadsheet's suggested setup.
+2. Select the member/division rewards you want, or load the suggested setup. Every cell is shaded with its 3.29 priority band, so the sheet's Great/Good/Average/Worst colours are visible while you choose.
 3. Enter safehouse intelligence, the divisions you intend to farm, and red/green relationships. The board draws those relationships and flags same-group links.
 4. Pick a defeated member, add the exact special outcome offered, and confirm the recommended choice.
 5. Resolve every defeated reinforcement before pressing **Finish encounter**. Prison turns and intelligence advance once at that point.
@@ -32,8 +32,15 @@ The current board, targets, fifty automatic history points, and up to twenty nam
 
 ## Data
 
-Reward descriptions and the suggested layout are transcribed from the spreadsheet specified for this project:
+`src/data.ts` holds the whole 3.29 grid in one table: each member's overall band plus the reward text and priority band of all four of their cells, transcribed from Ayeleth's 3.29 Betrayal cheat sheet.
 
-https://docs.google.com/spreadsheets/d/1fIs8sdvgZG7iVouPdtFkbRx5kv55_xVja8l19yubyRU/edit?gid=1814105689#gid=1814105689
+https://elrincondelexiliado.com/syndicate
+
+Everything else is derived from that table, so a league update only needs the grid edited:
+
+- Selecting a reward weights it by its band (`Great 4`, `Good 3`, `Average 1.5`, `Worst 0.5`), so the planner prefers a Great cell over an Average one at equal rank.
+- The suggested layout is the highest-value legal fill of the `2/5/2/5` shape. Transportation and Research count at full value because you control the leader there; Fortification and Intervention count at a quarter, so the two-member houses get first claim on the best rewards and the five-member houses take the rest.
+
+Rin is listed as "Rin Yushu" on the sheet; the app keeps the shorter `Rin` so existing saved boards and backups still load.
 
 This is an unofficial fan tool and is not affiliated with Grinding Gear Games.
