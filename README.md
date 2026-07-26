@@ -25,6 +25,7 @@ The current board, targets, fifty automatic history points, and up to twenty nam
 
 - Distinguishes assigned, unassigned, absent, and interrogated members.
 - Retains a prisoner's division, rank, countdown, and interrogation order; a fourth prisoner forces out the oldest.
+- The **Interrogating** panel is editable: set a prisoner's remaining encounters (1/2/3), release them with the `×` button, drag them onto a division to pull them out, or drag a division member in to jail them.
 - Scores the Transportation/Fortification/Research/Intervention `2/5/2/5` shape.
 - Rewards Rival links between the T/R two-member group and F/I five-member group, treats Trusted as setup progress, and penalizes same-group links.
 - Includes selected rewards, projected post-prison rank, leaders, safehouse intelligence, farm-house preferences, roster health, and structural cleanup in recommendations.

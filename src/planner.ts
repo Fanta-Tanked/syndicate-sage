@@ -1,4 +1,4 @@
-import { DIVISIONS, type BoardState, type Division, type EncounterOption, type GoalWeights, type MemberState, type ScoredOption } from './types'
+import { DIVISIONS, type BoardState, type Division, type EncounterOption, type GoalWeights, type MemberName, type MemberState, type ScoredOption } from './types'
 
 export const SHAPE_TARGETS: Record<Division, number> = { Transportation: 2, Fortification: 5, Research: 2, Intervention: 5 }
 const SMALL_HOUSES = new Set<Division>(['Transportation', 'Research'])
@@ -105,6 +105,21 @@ export function advanceEncounter(board: BoardState): BoardState {
     }
   }
   return { ...board, members, intelligence, updatedAt: Date.now() }
+}
+
+export function setInterrogation(board: BoardState, name: MemberName, turns: 0 | 1 | 2 | 3): BoardState {
+  const members = board.members.map(member => ({ ...member }))
+  const member = members.find(item => item.name === name)
+  if (!member) return board
+  if (turns === 0) {
+    member.imprisonedTurns = 0
+    member.interrogationOrder = undefined
+  } else {
+    member.imprisonedTurns = turns
+    member.leader = false
+    if (!member.interrogationOrder) member.interrogationOrder = Math.max(0, ...members.map(item => item.interrogationOrder ?? 0)) + 1
+  }
+  return { ...board, members, updatedAt: Date.now() }
 }
 
 export function boardUtility(board: BoardState, goals: GoalWeights): number {

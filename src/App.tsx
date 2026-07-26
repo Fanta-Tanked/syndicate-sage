@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AlertTriangle, Archive, ArrowRightLeft, Check, ChevronRight, Crown, Download, ExternalLink, Redo2, RotateCcw, Save, Sparkles, Swords, Target, Undo2, Upload, X } from 'lucide-react'
 import { DIVISION_COLORS, LEAGUE_VERSION, MEMBER_TIERS, MEMBERS, REWARD_TIERS, REWARDS, rewardWeight, SHEET_RECOMMENDED, TIER_COLORS, TIERS } from './data'
-import { advanceEncounter, makeBasicOptions, scoreOptions, SHAPE_TARGETS } from './planner'
+import { advanceEncounter, makeBasicOptions, scoreOptions, setInterrogation, SHAPE_TARGETS } from './planner'
 import { exportBackup, importBackup, loadBoard, loadGoals, loadHistory, loadSnapshots, saveBoard, saveGoals, saveHistory, saveSnapshots } from './storage'
 import { DIVISIONS, type Assignment, type BoardSnapshot, type BoardState, type Division, type EncounterOption, type GoalWeights, type MemberName, type MemberState } from './types'
 
@@ -95,13 +95,14 @@ function BoardEditor({ board, onChange }: { board: BoardState; onChange: (b: Boa
             <div className="member-name"><strong>{member.name}</strong></div>
             <select aria-label={`${member.name} division`} value={member.division} onChange={e => {
               const value = e.target.value as Assignment
-              change(member.name, { division: value, rank: value === 'Unassigned' || value === 'Absent' ? 0 : member.rank || 1, leader: DIVISIONS.includes(value as never) ? member.leader : false, imprisonedTurns: value === 'Absent' ? 0 : member.imprisonedTurns })
+              const stays = DIVISIONS.includes(value as never)
+              change(member.name, { division: value, rank: stays ? member.rank || 1 : 0, leader: stays ? member.leader : false, imprisonedTurns: stays ? member.imprisonedTurns : 0, interrogationOrder: stays ? member.interrogationOrder : undefined })
             }}>{ASSIGNMENTS.map(v => <option key={v}>{v}</option>)}</select>
             <div className="rank" aria-label={`${member.name} rank`}>
               {[1, 2, 3].map(rank => <button title={`Rank ${rank}`} key={rank} className={member.rank >= rank ? 'on' : ''} onClick={() => change(member.name, { rank: rank as 1 | 2 | 3 })}>◆</button>)}
             </div>
             <button className={`crown ${member.leader ? 'on' : ''}`} disabled={!DIVISIONS.includes(member.division as never)} title="Toggle leader" onClick={() => toggleLeader(member)}><Crown size={15} /></button>
-            {DIVISIONS.includes(member.division as never) && <button className={`prison-toggle ${(member.imprisonedTurns ?? 0) > 0 ? 'on' : ''}`} title="Toggle interrogation" onClick={() => change(member.name, { imprisonedTurns: (member.imprisonedTurns ?? 0) > 0 ? 0 : 3 })}>{(member.imprisonedTurns ?? 0) > 0 ? `${member.imprisonedTurns}T` : 'Jail'}</button>}
+            {(DIVISIONS.includes(member.division as never) || (member.imprisonedTurns ?? 0) > 0) && <button className={`prison-toggle ${(member.imprisonedTurns ?? 0) > 0 ? 'on' : ''}`} title={(member.imprisonedTurns ?? 0) > 0 ? 'Take out of interrogation' : 'Send to interrogation (3 encounters)'} onClick={() => change(member.name, (member.imprisonedTurns ?? 0) > 0 ? { imprisonedTurns: 0, interrogationOrder: undefined } : { imprisonedTurns: 3, leader: false })}>{(member.imprisonedTurns ?? 0) > 0 ? `${member.imprisonedTurns}T` : 'Jail'}</button>}
           </div>)}
           {!members.length && <div className="empty-slot">No members</div>}
         </div>
@@ -146,7 +147,17 @@ function VirtualBoard({ board, goals, onEdit, onBoard }: { board: BoardState; go
   }, [board.members, relationships])
 
   const moveMember = (name: MemberName, division: Assignment) => {
-    onBoard({ ...board, members: board.members.map(member => member.name === name ? { ...member, division, rank: division === 'Unassigned' || division === 'Absent' ? 0 : member.rank || 1, leader: DIVISIONS.includes(division as never) ? member.leader : false, imprisonedTurns: division === 'Absent' ? 0 : member.imprisonedTurns } : member), updatedAt: Date.now() })
+    if (!name) return
+    onBoard({ ...board, members: board.members.map(member => member.name === name ? { ...member, division, rank: division === 'Unassigned' || division === 'Absent' ? 0 : member.rank || 1, leader: DIVISIONS.includes(division as never) ? member.leader : false, imprisonedTurns: 0, interrogationOrder: undefined } : member), updatedAt: Date.now() })
+  }
+  const changeInterrogation = (name: MemberName, turns: 0 | 1 | 2 | 3) => {
+    if (!name) return
+    onBoard(setInterrogation(board, name, turns))
+  }
+  const dropIntoInterrogation = (name: MemberName) => {
+    const member = board.members.find(item => item.name === name)
+    if (!member || !DIVISIONS.includes(member.division as never) || (member.imprisonedTurns ?? 0) > 0) return
+    changeInterrogation(name, 3)
   }
   const saveRelationship = () => {
     if (relA === relB) return
@@ -221,7 +232,14 @@ function VirtualBoard({ board, goals, onEdit, onBoard }: { board: BoardState; go
           const members = board.members.filter(m => m.division === group)
           return <div className="bench-group" key={group} onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); moveMember(event.dataTransfer.getData('text/member') as MemberName, group) }}><strong>{group}</strong><div>{members.map(member => <span draggable onDragStart={event => event.dataTransfer.setData('text/member', member.name)} className="bench-member" key={member.name} title={`${member.name} — rank ${member.rank}`}><span className="avatar">{member.name.split(' ').map(v => v[0]).slice(0, 2).join('')}</span>{member.name}</span>)}{!members.length && <em>Drop a member here</em>}</div></div>
         })}
-        <div className="bench-group prison-group"><strong>Interrogating</strong><div>{board.members.filter(member => (member.imprisonedTurns ?? 0) > 0).map(member => <span className="bench-member" key={member.name}><span className="avatar">{member.name.split(' ').map(v => v[0]).slice(0, 2).join('')}</span>{member.name}<small>{member.imprisonedTurns} turns · {member.division}</small></span>)}{!board.members.some(member => (member.imprisonedTurns ?? 0) > 0) && <em>None</em>}</div></div>
+        <div className="bench-group prison-group" onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); dropIntoInterrogation(event.dataTransfer.getData('text/member') as MemberName) }}>
+          <strong>Interrogating <b>{board.members.filter(member => (member.imprisonedTurns ?? 0) > 0).length}/3</b></strong>
+          <div>{board.members.filter(member => (member.imprisonedTurns ?? 0) > 0).map(member => <span draggable onDragStart={event => event.dataTransfer.setData('text/member', member.name)} className="bench-member prisoner" key={member.name} title={`${member.name} — drag onto a division to take them out of interrogation`}>
+            <span className="avatar">{member.name.split(' ').map(v => v[0]).slice(0, 2).join('')}</span>{member.name}<small>{member.division}</small>
+            <span className="prison-turns" aria-label={`${member.name} interrogation turns remaining`}>{[1, 2, 3].map(turns => <button key={turns} className={member.imprisonedTurns === turns ? 'on' : ''} title={`${turns} encounter${turns > 1 ? 's' : ''} remaining`} onClick={() => changeInterrogation(member.name, turns as 1 | 2 | 3)}>{turns}</button>)}</span>
+            <button className="prison-release" title={`Take ${member.name} out of interrogation (keeps rank)`} onClick={() => changeInterrogation(member.name, 0)}><X size={11} /></button>
+          </span>)}{!board.members.some(member => (member.imprisonedTurns ?? 0) > 0) && <em>Drag a division member here to interrogate them</em>}</div>
+        </div>
         <span className="board-count">{assigned} assigned</span>
       </div>
       <div className="relationship-panel">
